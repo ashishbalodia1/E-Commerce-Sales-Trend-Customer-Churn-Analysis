@@ -10,8 +10,10 @@ application = app
 handler = app
 
 # Load trained Random Forest model if available
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'churn_model.joblib')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'churn_model.joblib')
 model_bundle = None
+
 if os.path.exists(MODEL_PATH):
     try:
         model_bundle = joblib.load(MODEL_PATH)
@@ -350,24 +352,27 @@ document.getElementById('churnForm').addEventListener('submit', async function(e
 </html>
 """
 
-@app.route('/')
-def home():
+def resolve_target(path):
+    orig = request.headers.get('x-forwarded-uri') or request.headers.get('x-matched-path')
+    if orig:
+        clean = orig.split('?')[0].strip('/')
+        return clean
+    return path.strip('/')
+
+def serve_home():
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/notebook')
-def notebook():
-    nb_path = os.path.join(os.path.dirname(__file__), 'customer_churn_analysis.html')
+def serve_notebook():
+    nb_path = os.path.join(BASE_DIR, 'customer_churn_analysis.html')
     if os.path.exists(nb_path):
         return send_file(nb_path)
     return "<h3>customer_churn_analysis.html not found.</h3>", 404
 
-@app.route('/figures/<path:filename>')
 def serve_figure(filename):
-    figures_dir = os.path.join(os.path.dirname(__file__), 'figures')
+    figures_dir = os.path.join(BASE_DIR, 'figures')
     return send_from_directory(figures_dir, filename)
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
+def handle_predict():
     data = request.get_json() or {}
     
     recency = float(data.get('recency', 60))
@@ -383,23 +388,14 @@ def predict():
     aov = monetary / frequency
     avg_items_per_order = total_quantity / frequency
 
-    features_vector = pd.DataFrame([{
-        'recency': recency,
-        'frequency': frequency,
-        'monetary': monetary,
-        'total_quantity': total_quantity,
-        'unique_items': unique_items,
-        'tenure': tenure,
-        'purchase_span': purchase_span,
-        'aov': aov,
-        'avg_items_per_order': avg_items_per_order,
-        'is_uk': is_uk
-    }])[FEATURE_COLS]
+    features_vector = np.array([[
+        recency, frequency, monetary, total_quantity, unique_items,
+        tenure, purchase_span, aov, avg_items_per_order, is_uk
+    ]])
 
     if model_bundle and 'model' in model_bundle:
         prob = float(model_bundle['model'].predict_proba(features_vector)[0, 1])
     else:
-        # Fallback calibrated risk scoring if model bundle is reloading
         dormancy_score = min(1.0, recency / 150.0)
         span_hazard = 1.0 if purchase_span == 0 else max(0.0, 1.0 - (purchase_span / tenure))
         prob = float(np.clip(0.45 * dormancy_score + 0.35 * span_hazard + 0.20 * (1.0 / (frequency + 1)), 0.05, 0.95))
@@ -422,6 +418,32 @@ def predict():
         "threshold": threshold,
         "recommendation": recommendation
     })
+
+# Universal catch-all handler for all Vercel routes & rewrites
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
+@app.route('/<path:path>', methods=['GET', 'POST'])
+def universal_handler(path):
+    target = resolve_target(path)
+    
+    # 1. Homepage matches
+    if target in ['', 'app.py', 'api', 'api/index', 'api/index.py', 'index', 'home']:
+        return serve_home()
+    
+    # 2. Prediction endpoint
+    if target in ['api/predict', 'predict']:
+        return handle_predict()
+    
+    # 3. Full Jupyter Notebook HTML
+    if target in ['notebook', 'customer_churn_analysis.html']:
+        return serve_notebook()
+    
+    # 4. Figures / Images
+    if target.startswith('figures/'):
+        fname = target.split('/', 1)[1]
+        return serve_figure(fname)
+    
+    # Fallback default: if user hit any unknown path, render home instead of 404
+    return serve_home()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
