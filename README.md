@@ -215,7 +215,11 @@ cd E-Commerce-Sales-Trend-Customer-Churn-Analysis
 
 ### 2. Install Dependencies
 ```bash
+# Lightweight web application (Vercel-ready):
 pip install -r requirements.txt
+
+# Full local development (Jupyter, Streamlit, XGBoost, PyArrow):
+pip install -r requirements-full.txt
 ```
 
 ### 3. Execution Options

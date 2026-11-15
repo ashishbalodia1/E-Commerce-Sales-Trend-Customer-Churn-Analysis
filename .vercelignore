@@ -1,0 +1,21 @@
+# Ignore large datasets and data files from Vercel serverless bundle
+data/
+*.xlsx
+*.csv
+*.parquet
+
+# Ignore local Jupyter notebook and development files
+customer_churn_analysis.ipynb
+.ipynb_checkpoints/
+project-3-guide.pdf
+reports/*.pdf
+
+# Ignore Streamlit and CLI scripts not needed by Vercel web app
+streamlit_app.py
+main.py
+requirements-full.txt
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
