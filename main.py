@@ -185,3 +185,9 @@ def run_pipeline():
 if __name__ == '__main__':
     run_pipeline()
 
+# Vercel entrypoint compatibility
+try:
+    from app import app, application, handler
+except ImportError:
+    pass
+

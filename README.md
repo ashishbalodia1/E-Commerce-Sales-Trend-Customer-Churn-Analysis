@@ -48,10 +48,14 @@ Using the **UCI Online Retail II dataset** (525,461 raw records, 407,664 clean t
 ```text
 E-Commerce-Sales-Trend-Customer-Churn-Analysis/
 │
-├── app.py                          # Interactive Streamlit Web App & Churn Predictor
+├── app.py                          # Vercel Production Web App (Flask WSGI entrypoint with Live API)
+├── streamlit_app.py                # Interactive Streamlit Web App & Churn Predictor
 ├── customer_churn_analysis.ipynb   # Main Jupyter Notebook (EDA, Pareto, ML fine-tuning)
 ├── customer_churn_analysis.html    # Standalone HTML export for web display & embedding
 ├── main.py                         # Standalone executable CLI pipeline script
+├── vercel.json                     # Vercel deployment configuration
+├── models/                         # Serialized ML model artifacts
+│   └── churn_model.joblib          # Trained Random Forest bundle for sub-50ms serverless inference
 ├── README.md                       # Comprehensive project documentation
 ├── requirements.txt                # Exact Python dependencies
 │
@@ -185,10 +189,10 @@ Hyperparameters tuned via **5-Fold Stratified Cross-Validation**:
 
 ## Interactive Streamlit Web Application
 
-The project includes an interactive web dashboard in `app.py`:
+The project includes an interactive web dashboard in `streamlit_app.py`:
 
 ```bash
-streamlit run app.py
+streamlit run streamlit_app.py
 ```
 
 ### Application Features:
@@ -216,13 +220,19 @@ pip install -r requirements.txt
 
 ### 3. Execution Options
 
-#### Option A: Run the Streamlit Web Application (Recommended)
+#### Option A: Run the Vercel-Ready Web App Locally
 ```bash
-streamlit run app.py
+python app.py
+```
+Open [http://localhost:5000](http://localhost:5000) for the production dashboard and live churn predictor.
+
+#### Option B: Run the Streamlit Web Application
+```bash
+streamlit run streamlit_app.py
 ```
 Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-#### Option B: Run the Standalone CLI Pipeline
+#### Option C: Run the Standalone CLI Pipeline
 ```bash
 python main.py
 ```
