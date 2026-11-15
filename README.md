@@ -7,6 +7,7 @@ An end-to-end data analysis and machine learning project on e-commerce retail da
 ## Repository Structure
 
 ```
+├── app.py                          # Interactive Streamlit Web Application & Churn Predictor
 ├── customer_churn_analysis.ipynb   # Main Jupyter Notebook (EDA, Pareto, ML fine-tuning & evaluation)
 ├── customer_churn_analysis.html    # Standalone HTML export for web display & frontend embedding
 ├── main.py                         # Standalone executable CLI pipeline script
@@ -145,3 +146,9 @@ jupyter notebook customer_churn_analysis.ipynb
 python -m http.server 8000
 # Open http://localhost:8000/customer_churn_analysis.html
 ```
+
+**Option D: Interactive Streamlit Web Application**
+```bash
+streamlit run app.py
+```
+*Features:* Executive KPI Cards, Category Bar Charts, Pareto 80/20 Curves, Live Customer Churn Simulator with Risk Gauge, and Individual Account Lookup.
