@@ -22,3 +22,4 @@ desktop.ini
 # Temporary scratch and cache files
 scratch/
 *.tmp
+anaconda_projects/

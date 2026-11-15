@@ -8,6 +8,7 @@ An end-to-end data analysis and machine learning project on e-commerce retail da
 
 ```
 ├── customer_churn_analysis.ipynb   # Main Jupyter Notebook (EDA, Pareto, ML fine-tuning & evaluation)
+├── customer_churn_analysis.html    # Standalone HTML export for web display & frontend embedding
 ├── README.md                       # Project overview, setup, and results documentation
 ├── requirements.txt                # Exact dependencies
 ├── data/                           # Data directory
