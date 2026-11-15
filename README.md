@@ -9,6 +9,7 @@ An end-to-end data analysis and machine learning project on e-commerce retail da
 ```
 ├── customer_churn_analysis.ipynb   # Main Jupyter Notebook (EDA, Pareto, ML fine-tuning & evaluation)
 ├── customer_churn_analysis.html    # Standalone HTML export for web display & frontend embedding
+├── main.py                         # Standalone executable CLI pipeline script
 ├── README.md                       # Project overview, setup, and results documentation
 ├── requirements.txt                # Exact dependencies
 ├── data/                           # Data directory
@@ -126,8 +127,21 @@ cd "Customer churn Analysis"
 pip install -r requirements.txt
 ```
 
-### 2. Run the Notebook
+### 2. Run the Analysis
+
+**Option A: Execute Standalone CLI Pipeline**
+```bash
+python main.py
+```
+
+**Option B: Interactive Jupyter Notebook**
 ```bash
 jupyter notebook customer_churn_analysis.ipynb
 ```
-The notebook contains pre-executed cell outputs, styled data tables, training vs. testing comparisons, and inline plots.
+
+**Option C: View Standalone HTML in Browser**
+```bash
+# Double-click customer_churn_analysis.html or serve locally:
+python -m http.server 8000
+# Open http://localhost:8000/customer_churn_analysis.html
+```
