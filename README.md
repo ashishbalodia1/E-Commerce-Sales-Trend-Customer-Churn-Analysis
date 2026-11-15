@@ -1,12 +1,18 @@
 # E-Commerce Customer Churn & Sales Trend Analytics
 
+[![Live Demo on Vercel](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://e-commerce-sales-trend-customer-chu-flame.vercel.app)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/ashishbalodia1/E-Commerce-Sales-Trend-Customer-Churn-Analysis)
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B?logo=streamlit)
+![Flask](https://img.shields.io/badge/Flask-3.0%2B-000000?logo=flask)
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-1.2%2B-F7931E?logo=scikitlearn)
 ![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458?logo=pandas)
-![Status](https://img.shields.io/badge/Status-Completed-success)
+![Status](https://img.shields.io/badge/Deployment-Live-success)
 
-An end-to-end data science and machine learning project analyzing retail sales trends, product categories, and customer spend concentration (Pareto 80/20 Rule), backed by a fine-tuned Machine Learning Churn Classifier and an interactive **Streamlit Web Application**.
+> 🚀 **Live Production Web Application:** [https://e-commerce-sales-trend-customer-chu-flame.vercel.app](https://e-commerce-sales-trend-customer-chu-flame.vercel.app)
+
+An end-to-end data science and machine learning project analyzing retail sales trends, product categories, and customer spend concentration (Pareto 80/20 Rule), backed by a fine-tuned Machine Learning Churn Classifier, a serverless **Flask Production Web App deployed on Vercel**, and an interactive **Streamlit Dashboard**.
 
 ---
 
@@ -48,12 +54,15 @@ Using the **UCI Online Retail II dataset** (525,461 raw records, 407,664 clean t
 ```text
 E-Commerce-Sales-Trend-Customer-Churn-Analysis/
 │
-├── app.py                          # Vercel Production Web App (Flask WSGI entrypoint with Live API)
+├── app.py                          # Vercel Production Web App (Flask WSGI universal entrypoint)
+├── api/                            # Vercel serverless functions directory
+│   └── index.py                    # Serverless entrypoint mapping to app.py
 ├── streamlit_app.py                # Interactive Streamlit Web App & Churn Predictor
 ├── customer_churn_analysis.ipynb   # Main Jupyter Notebook (EDA, Pareto, ML fine-tuning)
 ├── customer_churn_analysis.html    # Standalone HTML export for web display & embedding
 ├── main.py                         # Standalone executable CLI pipeline script
-├── vercel.json                     # Vercel deployment configuration
+├── vercel.json                     # Vercel deployment & rewrite configuration
+├── .vercelignore                   # Excludes heavy datasets from serverless bundle (<140MB)
 ├── models/                         # Serialized ML model artifacts
 │   └── churn_model.joblib          # Trained Random Forest bundle for sub-50ms serverless inference
 ├── README.md                       # Comprehensive project documentation
@@ -224,29 +233,33 @@ pip install -r requirements-full.txt
 
 ### 3. Execution Options
 
-#### Option A: Run the Vercel-Ready Web App Locally
+#### Option A: Live Production Deployment (Vercel)
+The web application is live and accessible online:
+👉 **[https://e-commerce-sales-trend-customer-chu-flame.vercel.app](https://e-commerce-sales-trend-customer-chu-flame.vercel.app)**
+
+#### Option B: Run the Flask Web App Locally
 ```bash
 python app.py
 ```
-Open [http://localhost:5000](http://localhost:5000) for the production dashboard and live churn predictor.
+Open [http://localhost:5000](http://localhost:5000) for the local dashboard and live churn predictor.
 
-#### Option B: Run the Streamlit Web Application
+#### Option C: Run the Streamlit Web Application
 ```bash
 streamlit run streamlit_app.py
 ```
 Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-#### Option C: Run the Standalone CLI Pipeline
+#### Option D: Run the Standalone CLI Pipeline
 ```bash
 python main.py
 ```
 
-#### Option C: Interactive Jupyter Notebook
+#### Option E: Interactive Jupyter Notebook
 ```bash
 jupyter notebook customer_churn_analysis.ipynb
 ```
 
-#### Option D: Standalone HTML Notebook View
+#### Option F: Standalone HTML Notebook View
 Double-click `customer_churn_analysis.html` to view in any browser, or serve locally:
 ```bash
 python -m http.server 8000
@@ -270,3 +283,4 @@ python -m http.server 8000
 - **Author:** Ashis Balodia
 - **GitHub:** [@ashishbalodia1](https://github.com/ashishbalodia1)
 - **Repository:** [E-Commerce-Sales-Trend-Customer-Churn-Analysis](https://github.com/ashishbalodia1/E-Commerce-Sales-Trend-Customer-Churn-Analysis)
+- **Live Web App:** [https://e-commerce-sales-trend-customer-chu-flame.vercel.app](https://e-commerce-sales-trend-customer-chu-flame.vercel.app)
