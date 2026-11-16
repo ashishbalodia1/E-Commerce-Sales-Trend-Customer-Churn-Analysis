@@ -292,23 +292,34 @@ document.getElementById('churnForm').addEventListener('submit', async function(e
     e.preventDefault();
     
     const payload = {
-        monetary: parseFloat(document.getElementById('monetary').value),
-        frequency: parseInt(document.getElementById('frequency').value),
-        recency: parseInt(document.getElementById('recency').value),
-        tenure: parseInt(document.getElementById('tenure').value),
-        purchase_span: parseInt(document.getElementById('purchase_span').value),
-        total_quantity: parseInt(document.getElementById('total_quantity').value),
-        unique_items: parseInt(document.getElementById('unique_items').value),
-        is_uk: parseInt(document.getElementById('is_uk').value),
-        threshold: parseFloat(document.getElementById('threshold').value)
+        monetary: parseFloat(document.getElementById('monetary').value) || 0,
+        frequency: parseInt(document.getElementById('frequency').value) || 1,
+        recency: parseInt(document.getElementById('recency').value) || 0,
+        tenure: parseInt(document.getElementById('tenure').value) || 1,
+        purchase_span: parseInt(document.getElementById('purchase_span').value) || 0,
+        total_quantity: parseInt(document.getElementById('total_quantity').value) || 1,
+        unique_items: parseInt(document.getElementById('unique_items').value) || 1,
+        is_uk: parseInt(document.getElementById('is_uk').value) || 1,
+        threshold: parseFloat(document.getElementById('threshold').value) || 0.35
     };
 
     try {
+        // Try /api/predict first, fallback to /predict or current origin
         const res = await fetch('/api/predict', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(payload)
         });
+
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const rawText = await res.text();
+            throw new Error("Server returned non-JSON response (status: " + res.status + ")");
+        }
+
         const data = await res.json();
 
         document.getElementById('placeholderResult').style.display = 'none';
@@ -344,20 +355,13 @@ document.getElementById('churnForm').addEventListener('submit', async function(e
         document.getElementById('actionDesc').innerText = data.recommendation;
 
     } catch (err) {
-        alert('Prediction request failed: ' + err);
+        alert('Prediction request failed: ' + err.message);
     }
 });
 </script>
 </body>
 </html>
 """
-
-def resolve_target(path):
-    orig = request.headers.get('x-forwarded-uri') or request.headers.get('x-matched-path')
-    if orig:
-        clean = orig.split('?')[0].strip('/')
-        return clean
-    return path.strip('/')
 
 def serve_home():
     return render_template_string(HTML_TEMPLATE)
@@ -373,17 +377,21 @@ def serve_figure(filename):
     return send_from_directory(figures_dir, filename)
 
 def handle_predict():
-    data = request.get_json() or {}
+    data = request.get_json(force=True, silent=True) or {}
     
-    recency = float(data.get('recency', 60))
-    frequency = max(1, float(data.get('frequency', 3)))
-    monetary = float(data.get('monetary', 500))
-    total_quantity = max(1, float(data.get('total_quantity', 100)))
-    unique_items = max(1, float(data.get('unique_items', 15)))
-    tenure = max(1, float(data.get('tenure', 180)))
-    purchase_span = max(0, float(data.get('purchase_span', 90)))
-    is_uk = int(data.get('is_uk', 1))
-    threshold = float(data.get('threshold', 0.35))
+    try:
+        recency = float(data.get('recency', 60))
+        frequency = max(1.0, float(data.get('frequency', 3)))
+        monetary = float(data.get('monetary', 500))
+        total_quantity = max(1.0, float(data.get('total_quantity', 100)))
+        unique_items = max(1.0, float(data.get('unique_items', 15)))
+        tenure = max(1.0, float(data.get('tenure', 180)))
+        purchase_span = max(0.0, float(data.get('purchase_span', 90)))
+        is_uk = int(data.get('is_uk', 1))
+        threshold = float(data.get('threshold', 0.35))
+    except Exception:
+        recency, frequency, monetary, total_quantity, unique_items = 60.0, 3.0, 500.0, 100.0, 15.0
+        tenure, purchase_span, is_uk, threshold = 180.0, 90.0, 1, 0.35
 
     aov = monetary / frequency
     avg_items_per_order = total_quantity / frequency
@@ -419,30 +427,45 @@ def handle_predict():
         "recommendation": recommendation
     })
 
-# Universal catch-all handler for all Vercel routes & rewrites
+# -------------------------------------------------------------
+# EXPLICIT FLASK ROUTES (Standard Matchers)
+# -------------------------------------------------------------
+@app.route('/api/predict', methods=['POST'])
+@app.route('/predict', methods=['POST'])
+def api_predict_route():
+    return handle_predict()
+
+@app.route('/notebook', methods=['GET'])
+@app.route('/customer_churn_analysis.html', methods=['GET'])
+def notebook_route():
+    return serve_notebook()
+
+@app.route('/figures/<path:filename>', methods=['GET'])
+def figures_route(filename):
+    return serve_figure(filename)
+
+# -------------------------------------------------------------
+# CATCH-ALL ROUTER (Handles rewrites & edge paths)
+# -------------------------------------------------------------
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def universal_handler(path):
-    target = resolve_target(path)
-    
-    # 1. Homepage matches
-    if target in ['', 'app.py', 'api', 'api/index', 'api/index.py', 'index', 'home']:
-        return serve_home()
-    
-    # 2. Prediction endpoint
-    if target in ['api/predict', 'predict']:
+    # Rule 1: ANY POST request in this application is ALWAYS a prediction call!
+    if request.method == 'POST':
         return handle_predict()
-    
-    # 3. Full Jupyter Notebook HTML
-    if target in ['notebook', 'customer_churn_analysis.html']:
-        return serve_notebook()
-    
-    # 4. Figures / Images
-    if target.startswith('figures/'):
-        fname = target.split('/', 1)[1]
+
+    p_clean = path.strip('/').lower()
+
+    # Rule 2: Figures
+    if p_clean.startswith('figures/'):
+        fname = path.split('/')[-1]
         return serve_figure(fname)
-    
-    # Fallback default: if user hit any unknown path, render home instead of 404
+
+    # Rule 3: Notebook
+    if 'notebook' in p_clean or 'customer_churn_analysis.html' in p_clean:
+        return serve_notebook()
+
+    # Rule 4: Everything else is Home
     return serve_home()
 
 if __name__ == '__main__':
